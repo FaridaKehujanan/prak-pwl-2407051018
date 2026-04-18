@@ -3,9 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserManagementController;
 
-
-
-Route::get('/user-management', [UserManagementController::class, 'index']);
+Route::get('/', [UserManagementController::class, 'index']);
 
 /*
 |--------------------------------------------------------------------------
@@ -17,4 +15,3 @@ Route::get('/user-management', [UserManagementController::class, 'index']);
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-
