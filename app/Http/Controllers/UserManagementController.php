@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Kelas;
 use App\Models\UserModel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class UserManagementController extends Controller
 {
@@ -44,17 +45,28 @@ class UserManagementController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'npm' => 'required|string|max:255',
+            'email' => 'required|email|unique:user,email',
+            'password' => 'required|string|min:6',
             'kelas_id' => 'required|exists:kelas,id'
         ]);
 
         $this->userModel->create([
             'name' => $request->input('name'),
             'npm' => $request->input('npm'),
+            'email' => $request->input('email'),
+            'password' => Hash::make($request->input('password')),
             'kelas_id' => $request->input('kelas_id')
         ]);
 
         return redirect()->route('user-management.index')
             ->with('success', 'Data user berhasil ditambahkan!');
+    }
+
+    public function edit($id)
+    {
+        $user = UserModel::findOrFail($id);
+        $kelas = $this->kelasModel->getKelas();
+        return view('edit-user', compact('user', 'kelas'));
     }
 
     public function update(Request $request, $id)

@@ -1,142 +1,79 @@
-@extends('layouts.app')
-@section('title', 'User Management')
-@section('content')
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            👥 User Management
+        </h2>
+    </x-slot>
 
-<div class="container py-4">
-    <div class="card shadow border-0">
-        <div class="card-header text-white d-flex justify-content-between align-items-center"
-            style="background-color: #212121;">
-            <h4 class="mb-0">👥 User Management</h4>
-            <a href="{{ route('user-management.create') }}" class="btn btn-outline-light btn-sm">
-                ➕ Tambah User
-            </a>
-        </div>
-        <div class="card-body" style="background-color: #f5f5f5;">
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
 
-            {{-- Alert sukses --}}
-            @if(session('success'))
-                <div class="alert alert-secondary alert-dismissible fade show border-0 shadow-sm" role="alert"
-                    style="background-color: #e0e0e0; color: #212121;">
-                    ✅ {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif
-
-            {{-- Search --}}
-            <form method="GET" action="{{ route('user-management.index') }}" class="mb-3">
-                <div class="input-group">
-                    <input type="text" name="search" class="form-control border-secondary"
-                        placeholder="Cari nama, NPM, atau kelas..."
-                        value="{{ $search }}"
-                        style="background-color: #fff;">
-                    <button class="btn btn-dark" type="submit">🔍 Cari</button>
-                    @if($search)
-                        <a href="{{ route('user-management.index') }}" class="btn btn-secondary">✖ Reset</a>
+                    @if(session('success'))
+                        <div class="mb-4 p-4 bg-green-100 text-green-800 rounded">
+                            ✅ {{ session('success') }}
+                        </div>
                     @endif
+
+                    <div class="mb-4 flex justify-between items-center">
+                        <form method="GET" action="{{ route('user-management.index') }}" class="flex gap-2">
+                            <input type="text" name="search" class="border rounded px-3 py-1"
+                                placeholder="Cari nama, NPM..."
+                                value="{{ $search ?? '' }}">
+                            <button class="bg-gray-800 text-white px-3 py-1 rounded" type="submit">🔍 Cari</button>
+                            @if(!empty($search))
+                                <a href="{{ route('user-management.index') }}" class="bg-gray-400 text-white px-3 py-1 rounded">✖ Reset</a>
+                            @endif
+                        </form>
+                        <a href="{{ route('user-management.create') }}" class="bg-gray-800 text-white px-3 py-1 rounded">
+                            ➕ Tambah User
+                        </a>
+                    </div>
+
+                    <table class="w-full border-collapse border border-gray-300">
+                        <thead class="bg-gray-800 text-white">
+                            <tr>
+                                <th class="border p-2">No</th>
+                                <th class="border p-2">Nama</th>
+                                <th class="border p-2">NPM</th>
+                                <th class="border p-2">Kelas</th>
+                                <th class="border p-2">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($users as $index => $user)
+                                <tr class="hover:bg-gray-100">
+                                    <td class="border p-2 text-center">{{ $users->firstItem() + $index }}</td>
+                                    <td class="border p-2">{{ $user->name }}</td>
+                                    <td class="border p-2">{{ $user->npm }}</td>
+                                    <td class="border p-2">{{ $user->nama_kelas }}</td>
+                                    <td class="border p-2 text-center">
+                                        <a href="{{ route('user-management.edit', $user->id) }}"
+                                            class="bg-blue-500 text-white px-2 py-1 rounded text-sm">✏️ Edit</a>
+                                        <form action="{{ route('user-management.destroy', $user->id) }}"
+                                            method="POST" class="inline"
+                                            onsubmit="return confirm('Yakin hapus?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="bg-red-500 text-white px-2 py-1 rounded text-sm">🗑️ Hapus</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="border p-2 text-center text-gray-500">Tidak ada data.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+
+                    <div class="mt-4">
+                        {{ $users->appends(['search' => $search ?? ''])->links() }}
+                    </div>
+
                 </div>
-            </form>
-
-            {{-- Tabel --}}
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover align-middle">
-                    <thead style="background-color: #212121; color: #fff;">
-                        <tr>
-                            <th>No</th>
-                            <th>Nama</th>
-                            <th>NPM</th>
-                            <th>Kelas</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody style="background-color: #fff;">
-                        @forelse ($users as $index => $user)
-                            <tr>
-                                <td>{{ $users->firstItem() + $index }}</td>
-                                <td>{{ $user->name }}</td>
-                                <td>{{ $user->npm }}</td>
-                                <td>
-                                    <span class="badge"
-                                        style="background-color: #616161; color: #fff;">
-                                        {{ $user->nama_kelas }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-secondary btn-sm"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#editModal{{ $user->id }}">
-                                        ✏️ Edit
-                                    </button>
-                                    <form action="{{ route('user-management.destroy', $user->id) }}"
-                                        method="POST" class="d-inline"
-                                        onsubmit="return confirm('Yakin ingin menghapus data ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-dark btn-sm" type="submit">🗑️ Hapus</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="text-center text-muted">Tidak ada data user.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            {{-- Paginasi --}}
-            <div class="d-flex justify-content-center">
-                {{ $users->appends(['search' => $search])->links() }}
-            </div>
-
-        </div>
-    </div>
-</div>
-
-{{-- Modal Edit --}}
-@foreach ($users as $user)
-<div class="modal fade" id="editModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header text-white" style="background-color: #212121;">
-                <h5 class="modal-title">✏️ Edit User</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" style="background-color: #f5f5f5;">
-                <form action="{{ route('user-management.update', $user->id) }}" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Nama</label>
-                        <input type="text" class="form-control" name="name"
-                            value="{{ $user->name }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">NPM</label>
-                        <input type="text" class="form-control" name="npm"
-                            value="{{ $user->npm }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Kelas</label>
-                        <select class="form-select" name="kelas_id">
-                            @foreach ($kelas as $k)
-                                <option value="{{ $k->id }}"
-                                    {{ $k->id == $user->kelas_id ? 'selected' : '' }}>
-                                    {{ $k->nama_kelas }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-secondary"
-                            data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-dark">💾 Simpan</button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
-</div>
-@endforeach
-
-@endsection
+</x-app-layout>

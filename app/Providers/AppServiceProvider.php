@@ -2,11 +2,14 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Pagination\Paginator; // ← tambah ini
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Pagination\Paginator;
 
 class AppServiceProvider extends ServiceProvider
 {
+    protected $policies = [];
+
     public function register(): void
     {
         //
@@ -14,6 +17,24 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Paginator::useBootstrapFive(); // ← tambah ini
+        $this->registerPolicies();
+
+        Paginator::useBootstrapFive();
+
+        Gate::define('view-users', function ($user) {
+            return $user->hasRole('dosen');
+        });
+
+        Gate::define('create-users', function ($user) {
+            return $user->hasRole('dosen');
+        });
+
+        Gate::define('update-users', function ($user) {
+            return $user->hasRole('dosen');
+        });
+
+        Gate::define('delete-users', function ($user) {
+            return $user->hasRole('dosen');
+        });
     }
 }
